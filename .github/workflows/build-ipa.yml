@@ -11,21 +11,23 @@ jobs:
         with:
           submodules: 'false' 
 
-      - name: Purge Broken Worktrees From Submodule Settings
+      - name: Clean and Reconstruct Valid Submodules Manually
         run: |
-          # Use sed to completely erase references to worktree sections inside .gitmodules
-          if [ -f .gitmodules ]; then
-            sed -i '' '/submodule "worktree\/Cataclysm-BN"/,/url =/d' .gitmodules || true
-            sed -i '' '/submodule "worktree\/Cataclysm-DDA"/,/url =/d' .gitmodules || true
-          fi
+          # 1. Kill the broken configurations entirely
+          rm -f .gitmodules
+          rm -rf .git/modules
           
-          # Force sync internal configuration layers
-          git submodule sync
-          git submodule init
+          # 2. Manually add back the critical engine Libraries using HTTPS URLs
+          # This completely bypasses SSH keys and broken worktree setups
+          git submodule add --force https://github.com Libraries/CDDA-Paywall || true
+          git submodule add --force https://github.com Libraries/JSController || true
+          git submodule add --force https://github.com Libraries/SDL || true
+          git submodule add --force https://github.com Libraries/SDL_image || true
+          git submodule add --force https://github.com Libraries/SDL_mixer || true
+          git submodule add --force https://github.com Libraries/SDL_ttf || true
           
-          # Update only the valid asset/code folders needed for compilation
-          git submodule update --init --recursive --force Libraries/ || true
-          git submodule update --init --recursive --force submodule/ || true
+          # 3. Initialize and pull the downloaded libraries
+          git submodule update --init --recursive --force
 
       - name: Set up Xcode Version
         uses: maxim-lobanov/setup-xcode@v1
@@ -53,6 +55,9 @@ jobs:
         with:
           name: Cataclysm-0F-iOS-IPA
           path: Cataclysm_0F.ipa
+
+
+
 
 
 
