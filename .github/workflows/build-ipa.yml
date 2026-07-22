@@ -9,12 +9,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          # Disabling 'recursive' stops Git from crashing over the worktree folders
           submodules: 'false' 
 
       - name: Fetch Core Repository Submodules Manually
         run: |
-          # Only initialize the base submodules needed for the environment wrapper
           git submodule update --init --remote --recursive submodule/ || true
 
       - name: Set up Xcode Version
@@ -22,10 +20,16 @@ jobs:
         with:
           xcode-version: 'latest'
 
+      - name: Diagnostic - List Project Schemes
+        run: |
+          # This forces Xcode to print the exact schemes available so we see them in the logs
+          xcodebuild -project CDDA.xcodeproj -list
+
       - name: Build Xcode Project
         run: |
+          # Building the workspace target directly while disabling code signing requirements
           xcodebuild -project CDDA.xcodeproj \
-                     -scheme CDDA \
+                     -alltargets \
                      -configuration Release \
                      -sdk iphoneos \
                      CODE_SIGNING_ALLOWED=NO \
@@ -35,7 +39,8 @@ jobs:
       - name: Package into IPA
         run: |
           mkdir -p Payload
-          cp -r build/Release-iphoneos/CDDA.app Payload/
+          # Finds the compiled .app file dynamically regardless of the target folder name
+          cp -r build/Release-iphoneos/*.app Payload/ 2>/dev/null || cp -r ~/Library/Developer/Xcode/DerivedData/*/Build/Products/Release-iphoneos/*.app Payload/
           zip -r Cataclysm_0F.ipa Payload
 
       - name: Upload Finished IPA
@@ -43,5 +48,6 @@ jobs:
         with:
           name: Cataclysm-0F-iOS-IPA
           path: Cataclysm_0F.ipa
+
 
   
