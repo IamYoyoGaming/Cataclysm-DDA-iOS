@@ -11,15 +11,21 @@ jobs:
         with:
           submodules: 'false' 
 
-      - name: Manually Initialize Mandatory Engine Submodules
+      - name: Purge Broken Worktrees From Submodule Settings
         run: |
-          # De-register the broken worktrees so Git doesn't check them
-          git config --global --unset-all submodule.worktree/Cataclysm-BN.url || true
-          git config --global --unset-all submodule.worktree/Cataclysm-DDA.url || true
+          # Use sed to completely erase references to worktree sections inside .gitmodules
+          if [ -f .gitmodules ]; then
+            sed -i '' '/submodule "worktree\/Cataclysm-BN"/,/url =/d' .gitmodules || true
+            sed -i '' '/submodule "worktree\/Cataclysm-DDA"/,/url =/d' .gitmodules || true
+          fi
           
-          # Force synchronization and grab the core .xcconfig/framework submodules
+          # Force sync internal configuration layers
+          git submodule sync
           git submodule init
-          git submodule update --recursive --force
+          
+          # Update only the valid asset/code folders needed for compilation
+          git submodule update --init --recursive --force Libraries/ || true
+          git submodule update --init --recursive --force submodule/ || true
 
       - name: Set up Xcode Version
         uses: maxim-lobanov/setup-xcode@v1
@@ -47,6 +53,12 @@ jobs:
         with:
           name: Cataclysm-0F-iOS-IPA
           path: Cataclysm_0F.ipa
+
+
+
+
+
+
 
 
 
