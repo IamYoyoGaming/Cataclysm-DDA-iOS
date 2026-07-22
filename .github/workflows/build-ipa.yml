@@ -20,16 +20,11 @@ jobs:
         with:
           xcode-version: 'latest'
 
-      - name: Diagnostic - List Project Schemes
+      - name: Build Xcode Project (0.F Version)
         run: |
-          # This forces Xcode to print the exact schemes available so we see them in the logs
-          xcodebuild -project CDDA.xcodeproj -list
-
-      - name: Build Xcode Project
-        run: |
-          # Building the workspace target directly while disabling code signing requirements
+          # Targeting the precise 0.F scheme found in your logs
           xcodebuild -project CDDA.xcodeproj \
-                     -alltargets \
+                     -scheme CDDA0F \
                      -configuration Release \
                      -sdk iphoneos \
                      CODE_SIGNING_ALLOWED=NO \
@@ -39,7 +34,7 @@ jobs:
       - name: Package into IPA
         run: |
           mkdir -p Payload
-          # Finds the compiled .app file dynamically regardless of the target folder name
+          # Grabs the specific compiled 0.F binary app
           cp -r build/Release-iphoneos/*.app Payload/ 2>/dev/null || cp -r ~/Library/Developer/Xcode/DerivedData/*/Build/Products/Release-iphoneos/*.app Payload/
           zip -r Cataclysm_0F.ipa Payload
 
@@ -48,6 +43,7 @@ jobs:
         with:
           name: Cataclysm-0F-iOS-IPA
           path: Cataclysm_0F.ipa
+
 
 
   
