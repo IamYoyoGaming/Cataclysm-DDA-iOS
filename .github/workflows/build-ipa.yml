@@ -9,7 +9,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          # Disabling 'recursive' stops Git from crashing over the worktree folders
+          submodules: 'false' 
+
+      - name: Fetch Core Repository Submodules Manually
+        run: |
+          # Only initialize the base submodules needed for the environment wrapper
+          git submodule update --init --remote --recursive submodule/ || true
 
       - name: Set up Xcode Version
         uses: maxim-lobanov/setup-xcode@v1
@@ -37,3 +43,5 @@ jobs:
         with:
           name: Cataclysm-0F-iOS-IPA
           path: Cataclysm_0F.ipa
+
+  
